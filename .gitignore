@@ -1,5 +1,6 @@
 *.pyc
 .idea
 .DSStore
-*.csv
 *.txt
+*.csv
+.ipynb_checkpoints/
