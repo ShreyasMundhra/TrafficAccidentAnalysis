@@ -2,6 +2,7 @@ import gmplot
 import pandas as pd
 import pickle
 from flask import Flask, render_template
+from flask.json import jsonify
 
 app = Flask(__name__)
 
@@ -62,6 +63,7 @@ def getCollisionsDf():
 def buildAccidentWithLocationsDict():
 	print("Inside initialize")
 	df = getCollisionsDf()
+	df = df[0:20000]
 
 	accidentWithLocsDict = {}
 	for index, row in df.iterrows():
@@ -90,13 +92,17 @@ def load_obj(name):
 
 @app.route('/get_locs/', methods=['POST'])
 def getAccidentLocs(accident):
+	print("inside get locs")
 	accidentWithLocsDict = load_obj("accident_dict")
-	return accidentWithLocsDict[accident]
+	return jsonify({'accidentLocs': accidentWithLocsDict[accident]})
 
 @app.route('/initialize/', methods=['GET'])
 def getAccidents():
+	print("Inside get accidents")
 	accidentWithLocsDict = load_obj("accident_dict")
-	return accidentWithLocsDict.keys()
+	print(type(accidentWithLocsDict))
+	print(accidentWithLocsDict.keys())
+	return jsonify({'accidents': accidentWithLocsDict.keys()})
 
 if __name__ == '__main__':
 	app.run(debug=True)

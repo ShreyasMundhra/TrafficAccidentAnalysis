@@ -9,7 +9,6 @@
 	function initialize() {
 		getAccidents();
 	
-	
 		var centerlatlng = new google.maps.LatLng(40.797000, -73.937780);
 		var myOptions = {
 			zoom: 16,
@@ -286,6 +285,7 @@ polygon.setMap(map);
 	}
 	
 function handleClick(){
+	//e.preventDefault();
 	//accident = document.getElementById("myList").value;
 	accident = document.getElementById("accidentList").value;
 	window.alert(accident);
@@ -310,40 +310,40 @@ function handleClick(){
 	return accident;
 }
 
-//var accidents;
-
 function getAccidents(){
-window.alert('inside ready');
+//window.alert('inside ready');
 var accidents;
+
+$(document).ready(function(){
+/*
+$.get("http://127.0.0.1:5000/initialize/",function(data){
+	accidents = data;
+	});
+*/
 
 $.ajax({
 		url: "http://127.0.0.1:5000/initialize/",
 		type: "GET",
 		success: function(data){
-		accidents = data;
-		window.alert("done!");
-		}
-	});
-
-$(document).ready(function(){
-/*
-$.get("http://127.0.0.1:5000/build-dict/",function(data){
-	accidents = data;
-	});
-*/
-
-var newSelect=document.createElement('select');
-newSelect.id = "accidentList"
+		accidents = data.accidents;
+		window.alert(accidents);
+		var newSelect=document.createElement('select');
+	newSelect.id = "accidentList"
     var selectHTML="";
-    //for(i=0; i<accidents.length; i=i+1){
-	for(accident in accidents)
-        selectHTML+= "<option value='"+accident+"'>"+accident+"</option>";
+    for(var i=0; i<accidents.length; i=i+1){
+	//for(accident in accidents){
+        selectHTML+= "<option value='"+accidents[i]+"'>"+accidents[i]+"</option>";
     }
     //selectHTML+= "<option value='test'>test</option>";
 
     newSelect.innerHTML= selectHTML;
     document.getElementById('accident_selection').appendChild(newSelect);
+		
+		window.alert("done!");
+		}
+	});
 });
+
 }
 
 </script>
