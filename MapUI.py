@@ -90,11 +90,11 @@ def load_obj(name):
 	with open(name + '.pkl', 'rb') as f:
 		return pickle.load(f)
 
-@app.route('/get_locs/', methods=['POST'])
-def getAccidentLocs(accident):
+@app.route('/get_locs/<accidentDict>', methods=['GET','POST'])
+def getAccidentLocs(accidentDict):
 	print("inside get locs")
 	accidentWithLocsDict = load_obj("accident_dict")
-	return jsonify({'accidentLocs': accidentWithLocsDict[accident]})
+	return jsonify({'accidentLocs': accidentWithLocsDict[accidentDict['accident']]})
 
 @app.route('/initialize/', methods=['GET'])
 def getAccidents():

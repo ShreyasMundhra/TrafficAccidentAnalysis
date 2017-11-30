@@ -348,14 +348,23 @@ $.ajax({
 function plotAccidents(){
 	accident = document.getElementById("accidentList").value;
 	window.alert(accident);
-	
+	$.ajax({url:'/get_locs/' + accident});
+	/*
 	$.ajax({
 		type: "POST",
 		url: "http://127.0.0.1:5000/get_locs/",
-		data: accident
+		data: JSON.stringify({'accident':accident}),
+		contentType: "application/json; charset=utf-8"
 	}).done(function( locs ) {
 		window.alert(locs);
 	});
+	*/
+	/*
+	$.post("http://127.0.0.1:5000/get_locs/",{'accident':accident})
+	.done(function( locs ) {
+		window.alert(locs);
+	});
+	*/
 }
 
 </script>
