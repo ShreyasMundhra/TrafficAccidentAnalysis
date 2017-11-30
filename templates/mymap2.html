@@ -303,8 +303,8 @@ function handleClick(){
 		type: "POST",
 		url: "http://127.0.0.1:5000/get_locs/",
 		data: accident
-	}).done(function( locs ) {
-		window.alert(locs);
+	}).done(function( locations ) {
+		window.alert(locations.locs);
 	});
 
 	return accident;
@@ -348,7 +348,10 @@ $.ajax({
 function plotAccidents(){
 	accident = document.getElementById("accidentList").value;
 	window.alert(accident);
-	$.ajax({url:'/get_locs/' + accident});
+	$.ajax({url:'/get_locs/' + accident,
+	}).done(function( locations ) {
+		window.alert(locations.locs);
+	});
 	/*
 	$.ajax({
 		type: "POST",
