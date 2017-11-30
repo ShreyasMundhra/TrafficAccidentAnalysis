@@ -283,7 +283,7 @@ polygon.setMap(map);
 
 //buildAccidentDict();
 	}
-	
+
 function handleClick(){
 	//e.preventDefault();
 	//accident = document.getElementById("myList").value;
@@ -310,6 +310,7 @@ function handleClick(){
 	return accident;
 }
 
+
 function getAccidents(){
 //window.alert('inside ready');
 var accidents;
@@ -326,7 +327,7 @@ $.ajax({
 		type: "GET",
 		success: function(data){
 		accidents = data.accidents;
-		window.alert(accidents);
+		//window.alert(accidents);
 		var newSelect=document.createElement('select');
 	newSelect.id = "accidentList"
     var selectHTML="";
@@ -339,7 +340,7 @@ $.ajax({
     newSelect.innerHTML= selectHTML;
     document.getElementById('accident_selection').appendChild(newSelect);
 		
-		window.alert("done!");
+		//window.alert("done!");
 		}
 	});
 });
@@ -347,10 +348,43 @@ $.ajax({
 
 function plotAccidents(){
 	accident = document.getElementById("accidentList").value;
-	window.alert(accident);
+	//window.alert(accident);
 	$.ajax({url:'/get_locs/' + accident,
-	}).done(function( locations ) {
-		window.alert(locations.locs);
+	}).done(function( data ) {
+		//window.alert(data.locs);
+		var centerlatlng = new google.maps.LatLng(40.797000, -73.937780);
+		var myOptions = {
+			zoom: 16,
+			center: centerlatlng,
+			mapTypeId: google.maps.MapTypeId.ROADMAP
+		};
+		var map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
+		var locations = data.locs;		
+		//window.alert("start Plotting");
+		
+		var regionMapMarkers = new google.maps.MVCArray();
+		for(var i = 0; i < locations.length; i++){
+			var location = locations[i];
+			regionMapMarkers.push(new google.maps.LatLng(location[0],location[1]));
+		}
+		
+		// Draw Markers
+        regionMapMarkers.forEach(function(latLng, m){
+            var marker = new google.maps.Marker(
+            {        
+            position: latLng,
+            map: map, 
+            title: latLng,
+            optimized: false
+            });
+        });
+		/*
+		newMarker = new google.maps.Marker({
+    position: new google.maps.LatLng(40.789,-73.93788),
+    //animation: google.maps.Animation.DROP,
+    map: map
+});*/
+		//window.alert("Finsh Plotting");
 	});
 	/*
 	$.ajax({
@@ -375,7 +409,7 @@ function plotAccidents(){
 <body style="margin:0px; padding:0px;" onload="initialize()">
 	<div id="map_canvas" style="width: 100%; height: 100%;"></div>
 	<form name="myform" onSubmit="return handleClick()">
-		<input name="Submit"  type="submit" value="Update" />
+		<!--input name="Submit"  type="submit" value="Update" /-->
 		<p>
 			<!--
 			<label>Accident</label>
@@ -389,6 +423,6 @@ function plotAccidents(){
 		</p>
 		<div id="accident_selection" onchange="plotAccidents()"></div>
 	</form>
-	<a href="/my-link/">Click me</a>
+	<!--a href="/my-link/">Click me</a-->
 </body>
 </html>
