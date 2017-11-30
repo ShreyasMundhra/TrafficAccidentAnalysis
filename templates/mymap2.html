@@ -343,7 +343,19 @@ $.ajax({
 		}
 	});
 });
+}
 
+function plotAccidents(){
+	accident = document.getElementById("accidentList").value;
+	window.alert(accident);
+	
+	$.ajax({
+		type: "POST",
+		url: "http://127.0.0.1:5000/get_locs/",
+		data: accident
+	}).done(function( locs ) {
+		window.alert(locs);
+	});
 }
 
 </script>
@@ -353,6 +365,7 @@ $.ajax({
 	<form name="myform" onSubmit="return handleClick()">
 		<input name="Submit"  type="submit" value="Update" />
 		<p>
+			<!--
 			<label>Accident</label>
 				<select id = "myList">
 					<option value = "1">one</option>
@@ -360,8 +373,9 @@ $.ajax({
 					<option value = "3">three</option>
 					<option value = "4">four</option>
 				</select>
+			-->
 		</p>
-		<div id="accident_selection"></div>
+		<div id="accident_selection" onchange="plotAccidents()"></div>
 	</form>
 	<a href="/my-link/">Click me</a>
 </body>
