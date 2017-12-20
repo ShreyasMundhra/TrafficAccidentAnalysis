@@ -192,12 +192,12 @@ def findTopAccidentGroups(probs):
 
         # sortedGroupToProb = sorted(groupToProb, key=groupToProb.get,reverse=True)
         topAccidents[borough] = []
-        index = 1
+        # index = 1
         for group in sorted(groupToProb, key=groupToProb.get,reverse=True):
-            if(index <= 5):
-                topAccidents[borough].append(group)
-            else:
-                break
+            # if(index <= 5):
+            topAccidents[borough].append(group)
+            # else:
+            #     break
 
     print(topAccidents)
     return topAccidents
@@ -215,8 +215,9 @@ def findTopViolationGroups(probs):
         topViolations[borough] = []
         index = 1
         for group in sorted(groupToProb, key=groupToProb.get,reverse=True):
-            if(index <= 10):
+            if(index <= 11):
                 topViolations[borough].append(group)
+                index = index + 1
             else:
                 break
 
@@ -269,8 +270,14 @@ if __name__ == "__main__":
     accidentProbs = findProbOfAccidentReasonsInBoroughs(collisionDf)
     violationProbs = findProbOfViolationReasonsInBoroughs(ticketDf)
 
-    findTopAccidentGroups(accidentProbs)
-    findTopViolationGroups(violationProbs)
+    topAccidents = findTopAccidentGroups(accidentProbs)
+    topViolations = findTopViolationGroups(violationProbs)
+
+    topAccidentsDf = pd.DataFrame.from_dict(topAccidents)
+    topViolationsDf = pd.DataFrame.from_dict(topViolations)
+
+    topAccidentsDf.to_csv('InferredData/topAccidents.csv',index=False)
+    topViolationsDf.to_csv('InferredData/topViolations.csv', index=False)
 
 
 
