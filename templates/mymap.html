@@ -4,8 +4,11 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 <title>Google Maps - pygmaps </title>
 <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=visualization&sensor=true_or_false"></script>
+<script src="//code.jquery.com/jquery-3.2.1.js"></script>
 <script type="text/javascript">
 	function initialize() {
+		getAccidents();
+	
 		var centerlatlng = new google.maps.LatLng(40.797000, -73.937780);
 		var myOptions = {
 			zoom: 16,
@@ -13,26 +16,6 @@
 			mapTypeId: google.maps.MapTypeId.ROADMAP
 		};
 		var map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
-
-var PolylineCoordinates = [
-new google.maps.LatLng(40.797000, -73.937780),
-new google.maps.LatLng(40.865047, -73.924200),
-new google.maps.LatLng(40.764360, -73.880090),
-new google.maps.LatLng(40.755756, -73.964790),
-new google.maps.LatLng(40.678160, -73.897484),
-];
-
-var Path = new google.maps.Polyline({
-clickable: false,
-geodesic: true,
-path: PolylineCoordinates,
-strokeColor: "#6495ED",
-strokeOpacity: 1.000000,
-strokeWeight: 10
-});
-
-Path.setMap(map);
-
 
 var coords = [
 new google.maps.LatLng(40.797359, -73.937780),
@@ -297,12 +280,84 @@ strokeWeight: 1
 });
 
 polygon.setMap(map);
-
-
 	}
+
+function handleClick(){
+	accident = document.getElementById("accidentList").value;
+	window.alert(accident);
+	
+	$.ajax({
+		type: "POST",
+		url: "http://127.0.0.1:5000/get_locs/",
+		data: accident
+	}).done(function( locations ) {
+		window.alert(locations.locs);
+	});
+
+	return accident;
+}
+
+
+function getAccidents(){
+var accidents;
+
+$(document).ready(function(){
+$.ajax({
+		url: "http://127.0.0.1:5000/initialize/",
+		type: "GET",
+		success: function(data){
+		accidents = data.accidents;
+		var newSelect=document.createElement('select');
+	newSelect.id = "accidentList"
+    var selectHTML="";
+    for(var i=0; i<accidents.length; i=i+1){
+        selectHTML+= "<option value='"+accidents[i]+"'>"+accidents[i]+"</option>";
+    }
+
+    newSelect.innerHTML= selectHTML;
+    document.getElementById('accident_selection').appendChild(newSelect);
+	}
+	});
+});
+}
+
+function plotAccidents(){
+	accident = document.getElementById("accidentList").value;
+	$.ajax({url:'/get_locs/' + accident,
+	}).done(function( data ) {
+		var centerlatlng = new google.maps.LatLng(40.797000, -73.937780);
+		var myOptions = {
+			zoom: 16,
+			center: centerlatlng,
+			mapTypeId: google.maps.MapTypeId.ROADMAP
+		};
+		var map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
+		var locations = data.locs;				
+		var regionMapMarkers = new google.maps.MVCArray();
+		for(var i = 0; i < locations.length; i++){
+			var location = locations[i];
+			regionMapMarkers.push(new google.maps.LatLng(location[0],location[1]));
+		}
+		
+		// Draw Markers
+        regionMapMarkers.forEach(function(latLng, m){
+            var marker = new google.maps.Marker(
+            {        
+            position: latLng,
+            map: map, 
+            title: latLng,
+            optimized: false
+            });
+        });
+	});
+}
+
 </script>
 </head>
 <body style="margin:0px; padding:0px;" onload="initialize()">
 	<div id="map_canvas" style="width: 100%; height: 100%;"></div>
+	<form name="myform" onSubmit="return handleClick()">
+		<div id="accident_selection" onchange="plotAccidents()"></div>
+	</form>
 </body>
 </html>
