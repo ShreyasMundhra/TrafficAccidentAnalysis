@@ -52,6 +52,7 @@ def getAddress(coordinate):
     elif "Queens County" or "Nassau County" in location[0]['admin2']:
         borough = "QUEENS"
     return borough
+
 '''
  Change the range, can test one first to see the output, 
  I have finished 0 to 400, 
@@ -68,6 +69,7 @@ for sutnum in range(300, 400):
         processedDf.loc[addresses[0], ['Borough']] = borough
         print(addresses[0])
     print("finish dataset", sutnum)
+
 '''
  Save the processed processedDf to a csv
  This method is not efficient, because we have to add them together at the end
