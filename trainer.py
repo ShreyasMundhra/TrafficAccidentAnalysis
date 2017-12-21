@@ -224,10 +224,51 @@ def findTopViolationGroups(probs):
     print(topViolations)
     return topViolations
 
+def mergeTopAccidentsAndTopViolations(topAccidents, topViolations):
+    # collision_reasons_to_groups, collision_groups = loadObject('IntermediateData/collision_map')
+    violation_reasons_to_groups, violation_groups = loadObject('IntermediateData/violation_map')
+    collision_to_violation_map = loadObject('IntermediateData/collision_to_violation_map')[0]
+
+    topAccidentsAndViolations = {}
+
+    print(topAccidents.keys())
+    for borough in topAccidents.keys():
+        print(borough)
+        topAccidentsAndViolations[borough + "_ACCIDENTS"] = []
+        topAccidentsAndViolations[borough + "_VIOLATIONS"] = []
+
+        accidentGroups = topAccidents[borough]
+        violationGroups = topViolations[borough]
+
+        # accidentGroups = [collision_reasons_to_groups[accident] for accident in accidents]
+        # violationGroups = [violation_reasons_to_groups[violation] for violation in violations]
+
+        for i in range(0,len(accidentGroups)):
+            accidentGroup = accidentGroups[i]
+            topAccidentsAndViolations[borough + "_ACCIDENTS"].append(str(i+1) + ". " + accidentGroup)
+
+            mappedViolations = collision_to_violation_map[accidentGroup]
+            indices = [i for i,x in enumerate(mappedViolations) if x == 1]
+            mappedViolationGroups = [violation_groups[i + 1] for i in indices]
+
+            j = 0
+            while(j < len(violationGroups)):
+                if(violationGroups[j] in mappedViolationGroups):
+                    topAccidentsAndViolations[borough + "_VIOLATIONS"].append(str(j + 1) + ". " + violationGroups[j])
+                    break
+                j = j + 1
+
+            if(j == len(violationGroups)):
+                topAccidentsAndViolations[borough + "_VIOLATIONS"].append(str(j + 1) + ". ")
+
+    return topAccidentsAndViolations
+
 # TODO: Do not consider empty contributing factors in probability calculation
 if __name__ == "__main__":
     # collisionDf = pd.read_csv("ProcessedData/NYPD_Motor_Vehicle_Collisions.csv", low_memory=False)
     # convertAllCollisionReasonsToGroups(collisionDf)
+
+
     collisionDf = pd.read_csv("ProcessedData/Grouped_Collisions.csv", low_memory=False)
 
     collisionColsList = ['BOROUGH']
@@ -236,16 +277,23 @@ if __name__ == "__main__":
         collisionColsList.append(reason)
 
     collisionDf = collisionDf[collisionColsList]
-    collisionOheDf = oneHotEncoder(collisionDf,'IntermediateData/collision_ohe.csv')
-    collisionBoroughDf = createBoroughDf(collisionOheDf,"IntermediateData/collisionBorough.csv")
+
+
+
+    # collisionOheDf = oneHotEncoder(collisionDf,'IntermediateData/collision_ohe.csv')
+    # collisionBoroughDf = createBoroughDf(collisionOheDf,"IntermediateData/collisionBorough.csv")
 
 
     # collisionOheDf = pd.read_csv('IntermediateData/collision_ohe.csv')
     # collisionBoroughDf = pd.read_csv("IntermediateData/collisionBorough.csv")
 
-    findProbOfEventInBorough(collisionBoroughDf)
+    # findProbOfEventInBorough(collisionBoroughDf)
+
 
     ticketDf = pd.read_csv("ProcessedData/Grouped_Violations.csv", low_memory=False)
+
+
+
     # ticketDf = pd.read_csv("ProcessedData/Traffic_Tickets_Issued__Four_Year_Window - Copy.csv", low_memory=False)
     # courts = ["BRONX TVB","BROOKLYN NORTH TVB","BROOKLYN SOUTH TVB","MANHATTAN NORTH TVB","MANHATTAN SOUTH TVB","RICHMOND TVB","QUEENS NORTH TVB","QUEENS SOUTH TVB"]
     # # print("Ticket columns: " + str(ticketDf.columns))
@@ -256,16 +304,20 @@ if __name__ == "__main__":
     # convertAllViolationReasonsToGroups(nycticketDf)
     # # print("NYC courts: " + str(nycticketDf['Court'].unique()))
 
+
     ticketColsList = ['Violation Charged Code','Violation Description','Court']
     ticketDf = ticketDf[ticketColsList]
     ticketDf["BOROUGH"] = ticketDf.apply(lambda row: getBoroughFromCourt(row), axis=1)
+
+
     # print("NYC boroughs: " + str(nycticketDf['BOROUGH'].unique()))
     # print("NYC ticket reasons: " + str(len(nycticketDf['Violation Description'].unique())))
     # nycticketDf.to_csv('ticketdf.csv',index=False)
 
-    ticketOheDf = oneHotEncoder(ticketDf,'IntermediateData/ticket_ohe.csv',['BOROUGH'])
-    ticketBoroughDf = createBoroughDf(ticketOheDf, "IntermediateData/ticketBorough.csv")
-    findProbOfEventInBorough(ticketBoroughDf)
+    # ticketOheDf = oneHotEncoder(ticketDf,'IntermediateData/ticket_ohe.csv',['BOROUGH'])
+    # ticketBoroughDf = createBoroughDf(ticketOheDf, "IntermediateData/ticketBorough.csv")
+    # findProbOfEventInBorough(ticketBoroughDf)
+
 
     accidentProbs = findProbOfAccidentReasonsInBoroughs(collisionDf)
     violationProbs = findProbOfViolationReasonsInBoroughs(ticketDf)
@@ -278,6 +330,17 @@ if __name__ == "__main__":
 
     topAccidentsDf.to_csv('InferredData/topAccidents.csv',index=False)
     topViolationsDf.to_csv('InferredData/topViolations.csv', index=False)
+
+
+
+    # topAccidentsDf = pd.read_csv('InferredData/topAccidents.csv')
+    # topViolationsDf = pd.read_csv('InferredData/topViolations.csv')
+    # topAccidents = topAccidentsDf.to_dict(orient='list')
+    # topViolations = topViolationsDf.to_dict(orient='list')
+
+    topAccidentsAndViolations = mergeTopAccidentsAndTopViolations(topAccidents,topViolations)
+    topAccidentsAndViolationsDf = pd.DataFrame.from_dict(topAccidentsAndViolations)
+    topAccidentsAndViolationsDf.to_csv('InferredData/topAccidents&Violations.csv',index=False)
 
 
 
