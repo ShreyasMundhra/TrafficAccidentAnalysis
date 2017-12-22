@@ -2,11 +2,13 @@ import pandas as pd
 import numpy as np
 import pickle
 
+# one hot encode cols
 def oneHotEncoder(df,filename,cols=None):
     oheDf = pd.get_dummies(data=df,columns=cols)
     oheDf.to_csv(filename, index=False)
     return oheDf
 
+# create dataframe having just the one hot encoded values of the boroughs
 def createBoroughDf(oheDf, filename):
     boroughs = ["BRONX", "BROOKLYN", "MANHATTAN", "QUEENS", "STATEN ISLAND"]
     boroughDf = oheDf[["BOROUGH_" + b for b in boroughs]]
@@ -14,6 +16,7 @@ def createBoroughDf(oheDf, filename):
     boroughDf.to_csv(filename, index=False)
     return boroughDf
 
+# find probability of an event in borough. Event can be either accident or issuance of ticket based on the dataframe passed
 def findProbOfEventInBorough(df):
     n = len(df.index)
     colProbs = {}
@@ -22,6 +25,7 @@ def findProbOfEventInBorough(df):
 
     return colProbs
 
+# get borough from court in a row in the tickets dataset
 def getBoroughFromCourt(row):
     map = {}
     map["BRONX TVB"] = "BRONX"
@@ -35,6 +39,7 @@ def getBoroughFromCourt(row):
 
     return map[row['Court']]
 
+# load object from a .pkl file
 def loadObject(name):
     objects = []
     with open(name + '.pkl', 'rb') as f:
@@ -46,6 +51,7 @@ def loadObject(name):
 
     return objects
 
+# convert all collision reasons to groups and store in csv file
 def convertAllCollisionReasonsToGroups(df):
     reasonCols = ['CONTRIBUTING FACTOR VEHICLE ' + str(i) for i in range(1,6)]
     collision_reasons_to_groups, collision_groups = loadObject('IntermediateData/collision_map')
@@ -58,6 +64,7 @@ def convertAllCollisionReasonsToGroups(df):
     df.to_csv('ProcessedData/Grouped_Collisions.csv',index=False)
     return df
 
+# convert collision reasons to groups for a particular row
 def convertCollisionReasonsToGroupsForRow(row,collision_reasons_to_groups, collision_groups):
     for i in range(1,6):
         column = 'CONTRIBUTING FACTOR VEHICLE ' + str(i)
@@ -68,6 +75,7 @@ def convertCollisionReasonsToGroupsForRow(row,collision_reasons_to_groups, colli
             row[column] = collision_reasons_to_groups[row[column]]
     return row
 
+# convert all violation reasons to groups and store in csv file
 def convertAllViolationReasonsToGroups(df):
     reasonCols = ['Violation Description']
     violation_reasons_to_groups, violation_groups = loadObject('IntermediateData/violation_map')
@@ -80,6 +88,7 @@ def convertAllViolationReasonsToGroups(df):
     df.to_csv('ProcessedData/Grouped_Violations.csv',index=False)
     return df
 
+# convert violation reasons to groups for a particular row
 def convertViolationReasonsToGroupsForRow(row,collision_reasons_to_groups, collision_groups):
     for i in range(1,2):
         column = 'Violation Description'
@@ -90,6 +99,7 @@ def convertViolationReasonsToGroupsForRow(row,collision_reasons_to_groups, colli
             row[column] = collision_reasons_to_groups[row[column]]
     return row
 
+# find number of times a label appears as a contributing factor in a collision
 def findLabelCountInCollisionRow(row, label):
     count = 0
     for i in range(1,6):
@@ -98,6 +108,7 @@ def findLabelCountInCollisionRow(row, label):
             count = count + 1
     return count
 
+# find probability a label appears as a contributing factor for a collision in a particular borough
 def trainCollisionModel(df,trainingLabel,borough):
     filteredDf = df.loc[df['BOROUGH'] == borough]
     countSeries = filteredDf.apply(lambda row: findLabelCountInCollisionRow(row, trainingLabel), axis=1)
@@ -116,6 +127,7 @@ def trainCollisionModel(df,trainingLabel,borough):
     prob = prob / (1.0 * numRows)
     return prob
 
+# find probability of accident happening due to each accident group in each borough
 def findProbOfAccidentReasonsInBoroughs(df):
     probs = {}
     for borough in ["BRONX", "BROOKLYN", "MANHATTAN", "QUEENS", "STATEN ISLAND"]:
@@ -124,6 +136,7 @@ def findProbOfAccidentReasonsInBoroughs(df):
             probs[borough].append(trainCollisionModel(df,group,borough))
     return probs
 
+# find number of times a label appears as a violation reason in a ticket issuance
 def findLabelCountInViolationRow(row, label):
     count = 0
     for i in range(1,2):
@@ -132,6 +145,7 @@ def findLabelCountInViolationRow(row, label):
             count = count + 1
     return count
 
+# find probability a label appears as a reason for a ticket issuance in a particular borough
 def trainViolationModel(df,trainingLabel,borough):
     filteredDf = df.loc[df['BOROUGH'] == borough]
     countSeries = filteredDf.apply(lambda row: findLabelCountInViolationRow(row, trainingLabel), axis=1)
@@ -145,6 +159,7 @@ def trainViolationModel(df,trainingLabel,borough):
     prob = prob / (1.0 * numRows)
     return prob
 
+# find probability of ticket being issued due to each ticket group in each borough
 def findProbOfViolationReasonsInBoroughs(df):
     probs = {}
     for borough in ["BRONX", "BROOKLYN", "MANHATTAN", "QUEENS", "STATEN ISLAND"]:
@@ -154,6 +169,7 @@ def findProbOfViolationReasonsInBoroughs(df):
 
     return probs
 
+# find the top reasons for accidents in each borough
 def findTopAccidentGroups(probs):
     collision_reasons_to_groups, collision_groups = loadObject('IntermediateData/collision_map')
 
@@ -169,6 +185,7 @@ def findTopAccidentGroups(probs):
 
     return topAccidents
 
+# find the top reasons for issuing tickets in each borough
 def findTopViolationGroups(probs):
     violation_reasons_to_groups, violation_groups = loadObject('IntermediateData/violation_map')
 
@@ -189,13 +206,13 @@ def findTopViolationGroups(probs):
 
     return topViolations
 
+# map top accidents to top reasons in each borough
 def mergeTopAccidentsAndTopViolations(topAccidents, topViolations):
     violation_reasons_to_groups, violation_groups = loadObject('IntermediateData/violation_map')
     collision_to_violation_map = loadObject('IntermediateData/collision_to_violation_map')[0]
 
     topAccidentsAndViolations = {}
 
-    print(topAccidents.keys())
     for borough in topAccidents.keys():
         print(borough)
         topAccidentsAndViolations[borough + "_ACCIDENTS"] = []
@@ -224,7 +241,6 @@ def mergeTopAccidentsAndTopViolations(topAccidents, topViolations):
 
     return topAccidentsAndViolations
 
-# TODO: Do not consider empty contributing factors in probability calculation
 if __name__ == "__main__":
     # RUN THIS FIRST
     # collisionDf = pd.read_csv("ProcessedData/NYPD_Motor_Vehicle_Collisions.csv", low_memory=False)
